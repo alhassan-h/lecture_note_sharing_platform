@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Lecture Note Sharing Platform - Home{% endblock %}
+
+{% block content %}
+<div class="row align-items-center justify-content-center" style="min-height: 70vh;">
+    <div class="col-lg-8 col-md-10">
+        <div class="card p-5 text-center">
+            <h1 class="display-4 mb-4">📚 Lecture Note Sharing Platform</h1>
+            <p class="lead mb-5 text-muted">
+                A simple and effective platform for lecturers to share lecture notes with students.
+            </p>
+            <p class="mb-4">
+                <strong>Get started:</strong> Register as a lecturer to upload notes or as a student to access them.
+            </p>
+            
+            {% if not current_user.is_authenticated %}
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a href="/login" class="btn btn-primary btn-lg px-4 gap-3">Login</a>
+                    <a href="/register" class="btn btn-outline-primary btn-lg px-4">Register</a>
+                </div>
+            {% else %}
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    {% if current_user.role == 'lecturer' %}
+                        <a href="/lecturer/dashboard" class="btn btn-primary btn-lg px-4 gap-3">Go to Dashboard</a>
+                        <a href="/lecturer/upload" class="btn btn-outline-primary btn-lg px-4">Upload Notes</a>
+                    {% else %}
+                        <a href="/student/dashboard" class="btn btn-primary btn-lg px-4 gap-3">View Available Notes</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <hr class="my-5">
+            
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <h5>For Lecturers</h5>
+                    <p class="text-muted small">
+                        Upload and manage your lecture notes in PDF or DOCX format. Organize by course and code.
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h5>For Students</h5>
+                    <p class="text-muted small">
+                        Browse lecture notes by course. Search and download materials for your classes.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

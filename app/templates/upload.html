@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Lecture Note - Lecture Note Sharing Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card p-4">
+            <h2 class="mb-4">Upload Lecture Note</h2>
+            
+            <form method="POST" action="/lecturer/upload" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="course_title" class="form-label">Course Title</label>
+                    <input type="text" class="form-control" id="course_title" name="course_title" required 
+                           placeholder="e.g., Introduction to Python">
+                </div>
+
+                <div class="mb-3">
+                    <label for="course_code" class="form-label">Course Code</label>
+                    <input type="text" class="form-control" id="course_code" name="course_code" required 
+                           placeholder="e.g., CS101">
+                </div>
+
+                <div class="mb-3">
+                    <label for="file" class="form-label">Select File (PDF or DOCX)</label>
+                    <input type="file" class="form-control" id="file" name="file" required 
+                           accept=".pdf,.docx,.doc">
+                    <small class="form-text text-muted">Supported formats: PDF, DOCX, DOC (Max 50 MB)</small>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Upload Note</button>
+                    <a href="/lecturer/dashboard" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
