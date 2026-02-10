@@ -1,54 +1,349 @@
 # Lecture Note Sharing Platform (LNSP)
 
-A simple web-based platform for lecturers to share lecture notes with students.
+A web-based platform for lecturers to share lecture notes with students. Built for flexibility—works locally with SQLite, scales to MySQL, and deploys to the cloud with PostgreSQL/Supabase.
 
 ## Project Overview
 
-This is a proof-of-concept web application built with Flask that allows:
+This is a full-featured web application built with Flask that allows:
 - **Lecturers** to upload, manage, and organize lecture notes
 - **Students** to browse, search, and download lecture notes
 - **Role-based access control** ensuring proper permissions
+- **Multiple database support** (SQLite, MySQL, PostgreSQL/Supabase)
+- **Cloud deployment ready** (Vercel + Supabase)
 
 ## Technology Stack
 
 - **Backend**: Python 3.8+ with Flask 3.0.0
-- **Database**: MySQL 8.0+
+- **Database**: SQLite (dev), MySQL (optional), PostgreSQL via Supabase (production)
 - **Frontend**: HTML5, Bootstrap 5
 - **Authentication**: Flask-Login
 - **ORM**: SQLAlchemy
-- **File Storage**: Local filesystem (`/uploads` directory)
+- **File Storage**: Local filesystem or Supabase Storage (cloud)
+- **Deployment**: Vercel (serverless)
 
 ## Prerequisites
 
 - Python 3.8 or higher
-- MySQL Server 8.0 or higher
 - pip (Python package installer)
+- Optional: MySQL Server 8.0+ (if using MySQL locally)
+- Optional: Supabase account (free tier available at [supabase.com](https://supabase.com))
 
-## Installation & Setup
+## Quick Start (Local Development)
 
-### 1. Create MySQL Database
-
-First, ensure MySQL is running and execute:
+### 1. Clone or set up the project
 
 ```bash
-python init_db.py
+# If you haven't cloned yet
+git clone <your-repo-url>
+cd lnsp
 ```
 
-This will create the `lnsp` database and all required tables.
+### 2. Create a Virtual Environment
 
-### 2. Install Python Dependencies
+**On macOS/Linux:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+**On Windows (PowerShell):**
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+**On Windows (CMD):**
+```cmd
+python -m venv venv
+venv\Scripts\activate
+```
+
+### 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configure Database Connection
+### 4. Initialize Database
 
-Edit `config.py` and update the database URI if needed:
+The application defaults to SQLite for local development. To initialize:
 
-```python
-SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:root@localhost/lnsp'
+```bash
+python init_db.py
 ```
+
+This creates a local `lnsp.db` file with all required tables.
+
+### 5. Run the Application
+
+```bash
+python run.py
+```
+
+Visit `http://localhost:5000` in your browser.
+
+### Default Test Credentials
+
+Test the application with these credentials:
+- **Lecturer**: `lecturer@example.com` / `password`
+- **Student**: `student@example.com` / `password`
+
+Or register new accounts!
+
+## Database Configuration
+
+The application supports three database options. Switch between them by setting the `DB_CONNECTION` environment variable.
+
+### SQLite (Default - Local Development)
+
+No additional setup needed. Uses a local `lnsp.db` file.
+
+```bash
+# In .env or environment
+DB_CONNECTION=sqlite
+```
+
+### MySQL (Self-hosted or Managed)
+
+Requires MySQL 8.0+. Set up connection in `.env`:
+
+```bash
+DB_CONNECTION=mysql
+DATABASE_URL=mysql+pymysql://user:password@localhost/lnsp
+```
+
+Then initialize:
+```bash
+python init_db.py
+```
+
+### PostgreSQL/Supabase (Production-Ready)
+
+Recommended for Vercel deployment. See [SUPABASE_SETUP.md](SUPABASE_SETUP.md) for detailed instructions.
+
+```bash
+DB_CONNECTION=postgres
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+```
+
+## Deployment
+
+### Deploy to Vercel (with Supabase)
+
+The platform is configured for serverless deployment on Vercel. Follow these guides:
+
+1. **Supabase Setup**: Read [SUPABASE_SETUP.md](SUPABASE_SETUP.md)
+   - Create a free Supabase project
+   - Get your database and storage credentials
+   - Configure your environment variables
+
+2. **Vercel Deployment**: Read [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)
+   - Connect your GitHub repository to Vercel
+   - Set environment variables in Vercel
+   - Deploy in one click!
+
+**Why Supabase + Vercel?**
+- Vercel's serverless functions don't have persistent storage
+- Supabase provides managed PostgreSQL + cloud storage
+- Perfect combination for scalable, serverless architecture
+- Free tier includes 500MB DB and 1GB storage
+
+## Project Structure
+
+```
+lnsp/
+├── app/
+│   ├── __init__.py          # Application factory
+│   ├── models.py            # SQLAlchemy models (User, Note)
+│   ├── supabase_client.py   # Supabase integration (new!)
+│   ├── routes/
+│   │   ├── auth.py          # Authentication routes
+│   │   ├── lecturer.py      # Lecturer routes (upload, delete)
+│   │   └── student.py       # Student routes (browse, download)
+│   └── templates/           # Jinja2 HTML templates
+├── config.py                # Application configuration
+├── run.py                   # Entry point
+├── init_db.py               # Database initialization
+├── requirements.txt         # Python dependencies
+├── .env.example             # Environment variables template
+├── vercel.json              # Vercel deployment config
+├── setup.sh                 # Automated setup (Unix/Linux/macOS)
+├── setup.bat                # Automated setup (Windows)
+├── SUPABASE_SETUP.md        # Supabase configuration guide
+├── VERCEL_DEPLOYMENT.md     # Vercel deployment guide
+└── README.md                # This file
+```
+
+## Key Features
+
+### For Lecturers
+- ✅ Secure login with role-based access
+- ✅ Upload lecture notes (PDF, DOCX)
+- ✅ View all uploaded notes with metadata
+- ✅ Delete notes (with confirmation)
+- ✅ Course organization (code + title)
+
+### For Students
+- ✅ Secure login with role-based access
+- ✅ Browse all available lecture notes
+- ✅ Search by course code or title
+- ✅ Download lecture notes
+- ✅ Pagination for large datasets
+
+### For System Administrators
+- ✅ Role-based access control (RBAC)
+- ✅ Database flexibility (SQLite, MySQL, PostgreSQL)
+- ✅ Environment-based configuration
+- ✅ Cloud-ready deployment
+- ✅ Automated setup scripts
+
+## Environment Variables
+
+Create a `.env` file (copy from `.env.example`):
+
+```env
+# Database Configuration
+DB_CONNECTION=sqlite              # Options: sqlite, mysql, postgres
+DATABASE_URL=                      # Optional: override default connection string
+
+# Supabase (for cloud deployment)
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-key
+SUPABASE_BUCKET_NAME=lecture-notes
+
+# Flask Configuration
+SECRET_KEY=your-secret-key        # Change in production!
+FLASK_ENV=production              # development or production
+```
+
+See [SUPABASE_SETUP.md](SUPABASE_SETUP.md) for detailed environment variable setup.
+
+## Development Workflow
+
+### Running with Automated Setup
+
+We provide scripts to automate the entire setup:
+
+**On macOS/Linux/WSL:**
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+**On Windows:**
+```cmd
+.\setup.bat
+```
+
+These scripts will:
+1. Create a virtual environment
+2. Activate it
+3. Install dependencies
+4. Initialize the database
+5. Start the application
+
+### Manual Development
+
+```bash
+# Activate venv (as shown in Quick Start)
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Initialize database
+python init_db.py
+
+# Run the application
+python run.py
+
+# Visit http://localhost:5000
+```
+
+### Making Changes
+
+1. Make code changes
+2. Database schema changes? Update `models.py` and run `python init_db.py`
+3. Changes are hot-reloaded (Flask development mode)
+4. Test your changes
+5. Commit and push
+
+## Testing
+
+To test the application:
+
+1. Start the server (`python run.py`)
+2. Open http://localhost:5000
+3. Register a new lecturer account
+4. Upload a test PDF or DOCX file
+5. Log out and register a student account
+6. Search for and download the test file
+
+## Troubleshooting
+
+### "No module named 'app'"
+Ensure you're in the correct directory and virtual environment is activated.
+
+### "Database connection failed"
+- Check `DB_CONNECTION` environment variable
+- Verify MySQL/Supabase credentials in `DATABASE_URL`
+- Ensure database server is running
+
+### "Supabase authentication failed"
+- Verify `SUPABASE_URL` and `SUPABASE_KEY` are correct
+- Check that API key hasn't been revoked in Supabase dashboard
+
+### "File upload failing"
+- Ensure `uploads/` directory exists (created by app)
+- Check write permissions
+- If using Supabase, verify bucket exists and is public
+
+See [SUPABASE_SETUP.md](SUPABASE_SETUP.md) and [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for more troubleshooting.
+
+## Contributing
+
+To contribute to this project:
+
+1. Create a feature branch: `git checkout -b feature/your-feature`
+2. Make your changes
+3. Test thoroughly
+4. Commit: `git commit -m "Add your feature"`
+5. Push: `git push origin feature/your-feature`
+6. Create a Pull Request
+
+## License
+
+This project is open source. Feel free to use, modify, and distribute.
+
+## Support Resources
+
+- **Flask Documentation**: https://flask.palletsprojects.com
+- **SQLAlchemy Documentation**: https://docs.sqlalchemy.org
+- **Supabase Documentation**: https://supabase.com/docs
+- **Vercel Documentation**: https://vercel.com/docs
+- **Bootstrap Documentation**: https://getbootstrap.com/docs
+
+## Future Enhancements
+
+Possible improvements:
+
+- [ ] User email verification
+- [ ] Password reset functionality
+- [ ] Advanced search filters (date range, file type)
+- [ ] File preview (PDF viewer)
+- [ ] User ratings/reviews of notes
+- [ ] Email notifications
+- [ ] Admin dashboard for user management
+- [ ] Audit logging
+- [ ] Two-factor authentication
+- [ ] File encryption at rest
+
+---
+
+**Ready to deploy?** Start with [SUPABASE_SETUP.md](SUPABASE_SETUP.md) → [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)
+
+**Running locally?** Just run `python run.py` (SQLite works out of the box!)
+
 
 Update `root:root` with your MySQL username and password.
 

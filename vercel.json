@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "env": {
+    "FLASK_APP": "run.py",
+    "FLASK_ENV": "production",
+    "DB_CONNECTION": "@db_connection",
+    "DATABASE_URL": "@database_url",
+    "SECRET_KEY": "@secret_key",
+    "SUPABASE_URL": "@supabase_url",
+    "SUPABASE_KEY": "@supabase_key",
+    "SUPABASE_SERVICE_KEY": "@supabase_service_key",
+    "SUPABASE_BUCKET_NAME": "@supabase_bucket_name"
+  },
+  "builds": [
+    {
+      "src": "run.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "run.py"
+    }
+  ]
+}

@@ -1,8 +1,9 @@
 """Database initialization script
 
-This script supports both SQLite and MySQL. It will:
+This script supports SQLite, MySQL, and PostgreSQL (via Supabase). It will:
 - For SQLite: create the SQLite database file and run SQLAlchemy `create_all()` to create tables.
 - For MySQL: connect to the MySQL server, create the database if it doesn't exist, then run SQLAlchemy `create_all()`.
+- For PostgreSQL: ensure the PostgreSQL database exists, then run SQLAlchemy `create_all()`.
 
 It reads the application's `SQLALCHEMY_DATABASE_URI` from `config.Config`, so you can switch databases by updating `config.py` or setting the `DATABASE_URL` environment variable.
 """
@@ -17,6 +18,10 @@ def is_mysql_uri(uri: str) -> bool:
     return uri.startswith('mysql')
 
 
+def is_postgres_uri(uri: str) -> bool:
+    return uri.startswith('postgresql') or uri.startswith('postgres')
+
+
 def parse_mysql_uri(uri: str):
     # Expect format: dialect+driver://user:password@host[:port]/dbname
     # Use urlparse to extract components
@@ -27,6 +32,18 @@ def parse_mysql_uri(uri: str):
     port = parsed.port or 3306
     # path begins with '/dbname'
     dbname = parsed.path.lstrip('/') if parsed.path else 'lnsp'
+    return username, password, hostname, port, dbname
+
+
+def parse_postgres_uri(uri: str):
+    # Expect format: postgresql://user:password@host[:port]/dbname
+    parsed = urlparse(uri)
+    username = parsed.username or 'postgres'
+    password = parsed.password or ''
+    hostname = parsed.hostname or 'localhost'
+    port = parsed.port or 5432
+    # path begins with '/dbname'
+    dbname = parsed.path.lstrip('/') if parsed.path else 'postgres'
     return username, password, hostname, port, dbname
 
 
@@ -56,6 +73,46 @@ def create_mysql_database(uri: str):
             pass
 
 
+def create_postgres_database(uri: str):
+    try:
+        import psycopg2
+    except ImportError:
+        print('psycopg2-binary is required to initialize PostgreSQL. Install it in your venv.')
+        sys.exit(1)
+
+    user, password, host, port, dbname = parse_postgres_uri(uri)
+
+    try:
+        # Connect to default postgres database to create the target database
+        conn = psycopg2.connect(
+            host=host,
+            port=port,
+            user=user,
+            password=password,
+            database='postgres'
+        )
+        conn.autocommit = True
+        cursor = conn.cursor()
+        
+        # Check if database exists
+        cursor.execute(f"SELECT 1 FROM pg_database WHERE datname = %s", (dbname,))
+        if not cursor.fetchone():
+            cursor.execute(f"CREATE DATABASE {dbname}")
+            print(f"✓ Database '{dbname}' created on {host}:{port}")
+        else:
+            print(f"✓ Database '{dbname}' already exists on {host}:{port}")
+        
+    except psycopg2.Error as e:
+        print(f'Error creating database: {e}')
+        sys.exit(1)
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except Exception:
+            pass
+
+
 def main():
     print('Initializing database for LNSP...')
 
@@ -68,13 +125,18 @@ def main():
     if is_mysql_uri(database_uri):
         print('Detected MySQL URI — ensuring database exists...')
         create_mysql_database(database_uri)
+    elif is_postgres_uri(database_uri):
+        print('Detected PostgreSQL URI — ensuring database exists...')
+        create_postgres_database(database_uri)
+    else:
+        print('Detected SQLite URI — no additional setup needed.')
 
     # Create tables using SQLAlchemy
     with app.app_context():
         print('Creating tables via SQLAlchemy...')
         db.create_all()
         print('✓ Tables created (if not present).')
-
-
+        print('\nDatabase initialization complete!')
+        print('You can now start the application with: python run.py')
 if __name__ == '__main__':
     main()

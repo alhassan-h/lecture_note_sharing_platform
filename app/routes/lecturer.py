@@ -6,12 +6,17 @@ from app.routes.auth import lecturer_required
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
+import io
 
 lecturer_bp = Blueprint('lecturer', __name__, url_prefix='/lecturer')
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+
+def is_using_supabase():
+    """Check if Supabase is configured"""
+    return os.environ.get('SUPABASE_URL') and os.environ.get('SUPABASE_KEY')
 
 @lecturer_bp.route('/dashboard')
 @login_required
@@ -51,16 +56,39 @@ def upload():
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
         filename = timestamp + original_filename
         
-        # Save file
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+        # Determine storage location
+        file_path = None
+        
+        if is_using_supabase():
+            # Upload to Supabase Storage
+            try:
+                from app.supabase_client import upload_to_supabase
+                
+                # Read file content
+                file.seek(0)  # Ensure we're at the start of the file
+                file_content = file.read()
+                
+                # Construct the path in Supabase storage
+                supabase_path = f"uploads/{filename}"
+                
+                # Upload and get the public URL
+                file_path = upload_to_supabase(file_content, supabase_path)
+                
+            except Exception as e:
+                flash(f'Failed to upload file to Supabase: {str(e)}', 'error')
+                return redirect(url_for('lecturer.upload'))
+        else:
+            # Save file to local filesystem
+            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            file_path = filepath
         
         # Create note record in database
         note = Note(
             course_title=course_title,
             course_code=course_code,
             filename=original_filename,
-            file_path=filepath,
+            file_path=file_path,  # This can be a local path or a Supabase URL
             uploaded_by=current_user.id
         )
         db.session.add(note)
@@ -83,13 +111,26 @@ def delete_note(note_id):
         flash('You do not have permission to delete this note.', 'error')
         return redirect(url_for('lecturer.dashboard'))
     
-    # Delete file from filesystem
-    if os.path.exists(note.file_path):
-        os.remove(note.file_path)
-    
-    # Delete from database
-    db.session.delete(note)
-    db.session.commit()
-    
-    flash('Lecture note deleted successfully!', 'success')
-    return redirect(url_for('lecturer.dashboard'))
+    # Delete file from storage
+    if is_using_supabase():
+        # Delete from Supabase Storage
+        try:
+            from app.supabase_client import delete_from_supabase
+            
+            # Extract the path from the stored file_path (which may be a full URL)
+            # For Supabase URLs like: https://xxx.supabase.co/storage/v1/object/public/lecture-notes/uploads/file.pdf
+            # We need to extract: uploads/file.pdf
+            if 'supabase.co' in note.file_path:
+                # Extract path from Supabase URL
+                bucket_name = os.environ.get('SUPABASE_BUCKET_NAME', 'lecture-notes')
+                # Find the position after the bucket name
+                marker = f'/{bucket_name}/'
+                if marker in note.file_path:
+                    supabase_path = note.file_path.split(marker)[-1]
+                    delete_from_supabase(supabase_path, bucket_name)
+        except Exception as e:
+            flash(f'Warning: Failed to delete file from Supabase: {str(e)}', 'warning')
+    else:
+        # Delete from local filesystem
+        if os.path.exists(note.file_path):
+            os.remove(note.file_path)
