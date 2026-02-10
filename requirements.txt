@@ -1,5 +1,22 @@
+# Before installing packages, create and activate a virtual environment.
+# Windows (PowerShell):
+#   python -m venv venv
+#   .\\venv\\Scripts\\Activate.ps1
+#
+# Windows (CMD):
+#   python -m venv venv
+#   venv\\Scripts\\activate
+#
+# macOS / Linux (bash/zsh):
+#   python3 -m venv venv
+#   source venv/bin/activate
+#
+# Then install dependencies:
+#   pip install -r requirements.txt
+
 Flask==3.0.0
 Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 Werkzeug==3.0.1
 mysql-connector-python==8.2.0
+PyMySQL==1.0.3
