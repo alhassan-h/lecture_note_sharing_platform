@@ -34,7 +34,7 @@ echo ""
 
 # Step 3: Activate virtual environment
 echo "🔌 Step 3: Activating virtual environment..."
-source venv/bin/activate
+source venv/Scripts/activate
 echo "   ✓ venv activated"
 echo ""
 
