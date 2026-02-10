@@ -40,8 +40,4 @@ def create_app(config_name='config'):
     def load_user(user_id):
         from app.models import User
         return User.query.get(int(user_id))
-    
-    with app.app_context():
-        db.create_all()
-    
     return app
