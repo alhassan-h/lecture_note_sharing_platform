@@ -15,7 +15,7 @@ class Config:
 
     if DB_CONNECTION == 'mysql':
         # Prefer explicit DATABASE_URL if supplied, otherwise fall back to local MySQL default.
-        SQLALCHEMY_DATABASE_URI = DATABASE_URL or 'mysql+pymysql://root:root@localhost/lnsp'
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL or 'mysql+pymysql://root:@localhost/lnsp'
     else:
         # Default to a local SQLite file in the project directory. Use DATABASE_URL if provided.
         SQLALCHEMY_DATABASE_URI = DATABASE_URL or f'sqlite:///{os.path.join(basedir, "lnsp.db")} '
